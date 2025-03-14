@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-class capaDensa:
+class DenseLayer:
     def __init__(self, entradas: int, neuronas: int):
         self.pesos = np.random.randn(entradas, neuronas) * 0.01
         self.sesgos = np.zeros((1, neuronas))

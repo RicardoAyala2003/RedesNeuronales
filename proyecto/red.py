@@ -1,5 +1,5 @@
 import numpy as np
-from DenseLayer import capaDensa, ReLU, Softmax, CrossEntropy
+from DenseLayer import DenseLayer, ReLU, Softmax, CrossEntropy
 from MnistDataset import MnistDataset
 
 class NeuralNetwork:
@@ -46,9 +46,13 @@ class NeuralNetwork:
 if __name__ == "__main__":
     print("Cargando datos de entrenamiento...")
     mnist_train = MnistDataset()
-    mnist_train.load("Mnist/dataset/train-images-idx3-ubyte", "Mnist/dataset/train-labels-idx1-ubyte")
+    mnist_train.load("/home/ricardo/Redes/Mnist/dataset/train-images-idx3-ubyte", 
+                 "/home/ricardo/Redes/Mnist/dataset/train-labels-idx1-ubyte")
+
     mnist_test = MnistDataset()
-    mnist_test.load("Mnist/dataset/t10k-images-idx3-ubyte", "Mnist/dataset/t10k-labels-idx1-ubyte")
+    mnist_test.load("/home/ricardo/Redes/Mnist/dataset/t10k-images-idx3-ubyte", 
+                "/home/ricardo/Redes/Mnist/dataset/t10k-labels-idx1-ubyte")
+
 
     X_train = mnist_train.get_flattened_data()
     y_train = mnist_train.get_one_hot_labels()
