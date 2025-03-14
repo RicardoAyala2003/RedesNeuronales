@@ -1,15 +1,17 @@
 import numpy as np
-  
+import os
+
 class capaDensa:
     def __init__(self, entradas: int, neuronas: int):
         self.pesos = np.random.randn(entradas, neuronas) * 0.01
         self.sesgos = np.zeros((1, neuronas))
 
-    def forward(self, datos: list[float]):
+    def forward(self, datos: np.ndarray):
         self.entrada = datos
-        self.salida = np.matmul(datos, self.pesos) + self.sesgos
+        self.salida = np.dot(datos, self.pesos) + self.sesgos
+        return self.salida  # Necesitamos retornar la salida aquí
 
-    def backward(self, dvalues: list[float]):
+    def backward(self, dvalues: np.ndarray):
         self.dpesos = np.dot(self.entrada.T, dvalues)
         self.dsesgos = np.sum(dvalues, axis=0, keepdims=True)
         self.dentrada = np.dot(dvalues, self.pesos.T)
@@ -19,46 +21,48 @@ class capaDensa:
         self.pesos -= learning_rate * self.dpesos
         self.sesgos -= learning_rate * self.dsesgos
 
+    def guardar_pesos(self, path="Mnist/pesosguardados"):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        np.save(f"{path}/pesos.npy", self.pesos)
+        np.save(f"{path}/sesgos.npy", self.sesgos)
+        print("Pesos y sesgos guardados.")
+
+    def cargar_pesos(self, path="Mnist/pesosguardados"):
+        try:
+            self.pesos = np.load(f"{path}/pesos.npy")
+            self.sesgos = np.load(f"{path}/sesgos.npy")
+            print("Pesos y sesgos cargados.")
+        except FileNotFoundError:
+            print(" error: No se encontraron los archivos de pesos y sesgos.")
+
+
 class ReLU:
-    def forward(self, x: list[float]):
+    def forward(self, x: np.ndarray):
         self.entrada = x
         self.salida = np.maximum(0, x)
 
-    def backward(self, dvalues: list[float]):
+    def backward(self, dvalues: np.ndarray):
         self.dentrada = dvalues.copy()
         self.dentrada[self.entrada <= 0] = 0
         return self.dentrada
 
 class Softmax:
-    def forward(self, x: list[float]):
-        exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
-        self.salida = exp_x / np.sum(exp_x, axis=1, keepdims=True)
+    def forward(self, inputs: np.ndarray):
+        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
+        sum_exp_values = np.sum(exp_values, axis=1, keepdims=True)
+        self.output = exp_values / sum_exp_values
+        return self.output
 
-    def backward(self, dvalues: list[float]):
-        self.dentrada = dvalues.copy()
-        return self.dentrada
-
-class Sigmoide:
-    def forward(self, x: list[float]):
-        self.entrada = x
-        self.salida = 1 / (1 + np.exp(-x))
-
-    def backward(self, dvalues: list[float]):
-        self.dentrada = dvalues * (1 - self.salida) * self.salida
-        return self.dentrada
+    def backward(self, grad_output: np.ndarray):
+        return grad_output
 
 class CrossEntropy:
-    def forward(self, y_pred: list[float], y_true: list[float]):
-        samples = len(y_pred)
+    def forward(self, y_pred: np.ndarray, y_true: np.ndarray):
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        correct_confidences = y_pred_clipped[range(samples), y_true]
-        negative_log_likelihoods = -np.log(correct_confidences)
-        return np.mean(negative_log_likelihoods)
+        loss = -np.sum(y_true * np.log(y_pred_clipped), axis=1)
+        return np.mean(loss)
 
-    def backward(self, dvalues: list[float], y_true: list[float]):
-        samples = len(dvalues)
-        labels = len(dvalues[0])
-        y_true = np.eye(labels)[y_true]
-        self.dentrada = -y_true / dvalues
-        self.dentrada = self.dentrada / samples
-        return self.dentrada
+    def backward(self, y_pred: np.ndarray, y_true: np.ndarray):
+        samples = len(y_pred)
+        return (y_pred - y_true) / samples
