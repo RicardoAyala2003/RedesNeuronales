@@ -9,7 +9,7 @@ class DenseLayer:
     def forward(self, datos: np.ndarray):
         self.entrada = datos
         self.salida = np.dot(datos, self.pesos) + self.sesgos
-        return self.salida  # Necesitamos retornar la salida aquí
+        return self.salida  
 
     def backward(self, dvalues: np.ndarray):
         self.dpesos = np.dot(self.entrada.T, dvalues)
@@ -35,17 +35,21 @@ class DenseLayer:
             print("Pesos y sesgos cargados.")
         except FileNotFoundError:
             print(" error: No se encontraron los archivos de pesos y sesgos.")
+            self.pesos = np.random.randn(self.pesos.shape[0], self.pesos.shape[1]) * 0.01
+            self.sesgos = np.zeros_like(self.sesgos)
 
 
 class ReLU:
     def forward(self, x: np.ndarray):
         self.entrada = x
         self.salida = np.maximum(0, x)
+        return self.salida  
 
     def backward(self, dvalues: np.ndarray):
         self.dentrada = dvalues.copy()
         self.dentrada[self.entrada <= 0] = 0
         return self.dentrada
+
 
 class Softmax:
     def forward(self, inputs: np.ndarray):
@@ -56,6 +60,7 @@ class Softmax:
 
     def backward(self, grad_output: np.ndarray):
         return grad_output
+
 
 class CrossEntropy:
     def forward(self, y_pred: np.ndarray, y_true: np.ndarray):
