@@ -2,72 +2,70 @@ import numpy as np
 import os
 
 class DenseLayer:
-    def __init__(self, entradas: int, neuronas: int):
-        self.pesos = np.random.randn(entradas, neuronas) * 0.01
-        self.sesgos = np.zeros((1, neuronas))
+    def __init__(self, input_size, output_size):
+        self.weights = np.random.randn(input_size, output_size) * np.sqrt(2. / input_size)
+        self.biases = np.zeros((1, output_size))
 
-    def forward(self, datos: np.ndarray):
-        self.entrada = datos
-        self.salida = np.dot(datos, self.pesos) + self.sesgos
-        return self.salida  
+    def forward(self, inputs):
+        self.inputs = inputs
+        return np.dot(inputs, self.weights) + self.biases
 
-    def backward(self, dvalues: np.ndarray):
-        self.dpesos = np.dot(self.entrada.T, dvalues)
-        self.dsesgos = np.sum(dvalues, axis=0, keepdims=True)
-        self.dentrada = np.dot(dvalues, self.pesos.T)
-        return self.dentrada
+    def backward(self, grad_output, lambda_l2=0.0): 
+        self.dweights = np.dot(self.inputs.T, grad_output) + lambda_l2 * self.weights
+        self.dbiases = np.sum(grad_output, axis=0, keepdims=True)
+        grad_input = np.dot(grad_output, self.weights.T)
+        return grad_input
 
-    def update(self, learning_rate: float):
-        self.pesos -= learning_rate * self.dpesos
-        self.sesgos -= learning_rate * self.dsesgos
+    def update(self, learning_rate):
+        self.weights -= learning_rate * self.dweights
+        self.biases -= learning_rate * self.dbiases
 
-    def guardar_pesos(self, path="Mnist/pesosguardados"):
+    def weights_saver(self, path="Mnist/pesosguardados"):
         if not os.path.exists(path):
             os.makedirs(path)
-        np.save(f"{path}/pesos.npy", self.pesos)
-        np.save(f"{path}/sesgos.npy", self.sesgos)
-        print("Pesos y sesgos guardados.")
+        np.save(f"{path}/weights.npy", self.weights)
+        np.save(f"{path}/biases.npy", self.biases)
+        print("Pesos y sesgos guardados correctamente.")
 
-    def cargar_pesos(self, path="Mnist/pesosguardados"):
+    def weights_loader(self, path="Mnist/pesosguardados"):
         try:
-            self.pesos = np.load(f"{path}/pesos.npy")
-            self.sesgos = np.load(f"{path}/sesgos.npy")
-            print("Pesos y sesgos cargados.")
+            loaded_weights = np.load(f"{path}/weights.npy")
+            loaded_biases = np.load(f"{path}/biases.npy")
+
+            if loaded_weights.shape == self.weights.shape and loaded_biases.shape == self.biases.shape:
+                self.weights = loaded_weights
+                self.biases = loaded_biases
+                print(f"Pesos cargados desde {path}")
+            else:
+                print(f"Error de dimensión en {path}. Se usará inicialización aleatoria.")
+
         except FileNotFoundError:
-            print(" error: No se encontraron los archivos de pesos y sesgos.")
-            self.pesos = np.random.randn(self.pesos.shape[0], self.pesos.shape[1]) * 0.01
-            self.sesgos = np.zeros_like(self.sesgos)
+            print(f"No se encontraron pesos en {path}. Se usará inicialización aleatoria.")
 
-
+                        
 class ReLU:
-    def forward(self, x: np.ndarray):
-        self.entrada = x
-        self.salida = np.maximum(0, x)
-        return self.salida  
+    def forward(self, inputs):
+        self.inputs = inputs
+        return np.maximum(0, inputs)
 
-    def backward(self, dvalues: np.ndarray):
-        self.dentrada = dvalues.copy()
-        self.dentrada[self.entrada <= 0] = 0
-        return self.dentrada
-
+    def backward(self, grad_output):
+        grad = grad_output.copy()
+        grad[self.inputs <= 0] = 0
+        return grad
 
 class Softmax:
-    def forward(self, inputs: np.ndarray):
+    def forward(self, inputs):
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         sum_exp_values = np.sum(exp_values, axis=1, keepdims=True)
-        self.output = exp_values / sum_exp_values
-        return self.output
+        return exp_values / (sum_exp_values + 1e-9)
 
-    def backward(self, grad_output: np.ndarray):
+    def backward(self, grad_output, outputs):
         return grad_output
 
 
 class CrossEntropy:
-    def forward(self, y_pred: np.ndarray, y_true: np.ndarray):
-        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        loss = -np.sum(y_true * np.log(y_pred_clipped), axis=1)
-        return np.mean(loss)
+    def compute_loss(self, y_true, y_pred):
+        return -np.mean(np.sum(y_true * np.log(y_pred + 1e-9), axis=1))
 
-    def backward(self, y_pred: np.ndarray, y_true: np.ndarray):
-        samples = len(y_pred)
-        return (y_pred - y_true) / samples
+    def compute_gradient(self, y_true, y_pred):
+        return y_pred - y_true
