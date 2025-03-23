@@ -11,23 +11,12 @@ class DenseLayer:
         return np.dot(inputs, self.weights) + self.biases
 
     def backward(self, grad_output, lambda_l2=0.0): 
-        self.dweights = np.dot(self.inputs.T, grad_output) + lambda_l2 * self.weights
+        self.dweights = np.dot(self.inputs.T, grad_output) + 2 * lambda_l2 * self.weights
         self.dbiases = np.sum(grad_output, axis=0, keepdims=True)
         grad_input = np.dot(grad_output, self.weights.T)
         return grad_input
 
-    def update(self, learning_rate):
-        self.weights -= learning_rate * self.dweights
-        self.biases -= learning_rate * self.dbiases
-
-    def weights_saver(self, path="Mnist/pesosguardados"):
-        if not os.path.exists(path):
-            os.makedirs(path)
-        np.save(f"{path}/weights.npy", self.weights)
-        np.save(f"{path}/biases.npy", self.biases)
-        print("Pesos y sesgos guardados correctamente.")
-
-    def weights_loader(self, path="Mnist/pesosguardados"):
+    def weights_loader(self, path):
         try:
             loaded_weights = np.load(f"{path}/weights.npy")
             loaded_biases = np.load(f"{path}/biases.npy")
@@ -41,6 +30,14 @@ class DenseLayer:
 
         except FileNotFoundError:
             print(f"No se encontraron pesos en {path}. Se usará inicialización aleatoria.")
+
+    def weights_saver(self, path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        np.save(f"{path}/weights.npy", self.weights)
+        np.save(f"{path}/biases.npy", self.biases)
+        print("Pesos y sesgos guardados correctamente.")
+
 
                         
 class ReLU:

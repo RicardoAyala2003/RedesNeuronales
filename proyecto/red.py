@@ -2,16 +2,16 @@ import numpy as np
 from DenseLayer import DenseLayer, ReLU, Softmax, CrossEntropy
 
 class NeuralNetwork:
-    def __init__(self, input_size, hidden_size1, hidden_size2, output_size, learning_rate=0.0005, optimizer=None):
-        self.capa1 = DenseLayer(input_size, hidden_size1)
+    def __init__(self, input_size, size1, size2, output_size, learning_rate=0.0005, optimizer=None):
+        self.capa1 = DenseLayer(input_size, size1)
         self.capa1.weights_loader("Mnist/pesosguardadosc1")
         self.activation1 = ReLU()
         
-        self.capa2 = DenseLayer(hidden_size1, hidden_size2)
+        self.capa2 = DenseLayer(size1, size2)
         self.capa2.weights_loader("Mnist/pesosguardadosc2")
         self.activation2 = ReLU()
         
-        self.capa3 = DenseLayer(hidden_size2, output_size)
+        self.capa3 = DenseLayer(size2, output_size)
         self.capa3.weights_loader("Mnist/pesosguardadosc3")
         self.activation3 = Softmax()
         
@@ -46,6 +46,13 @@ class NeuralNetwork:
     
     def train(self, X, y, epochs, batch_size, ytest, X_test, saveandprinteach):
         num_samples = X.shape[0]
+        
+        # Ver pesos antes del entrenamiento
+        print("Pesos antes del entrenamiento:")
+        print("Capa 1:", self.capa1.weights[:5, :5])
+        print("Capa 2:", self.capa2.weights[:5, :5])
+        print("Capa 3:", self.capa3.weights[:5, :5])
+        
         for epoch in range(epochs):
             indices = np.random.permutation(num_samples)
             epoch_loss = 0
@@ -85,6 +92,12 @@ class NeuralNetwork:
                 self.capa1.weights_saver("Mnist/pesosguardadosc1")
                 self.capa2.weights_saver("Mnist/pesosguardadosc2")
                 self.capa3.weights_saver("Mnist/pesosguardadosc3")
+        
+        # Ver pesos después del entrenamiento
+        print("Pesos después del entrenamiento:")
+        print("Capa 1:", self.capa1.weights[:5, :5])
+        print("Capa 2:", self.capa2.weights[:5, :5])
+        print("Capa 3:", self.capa3.weights[:5, :5])
     
     def predict(self, X):
         return np.argmax(self.forward(X), axis=1)
