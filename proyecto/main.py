@@ -1,18 +1,19 @@
 from MnistDataset import MnistDataset
 from red import NeuralNetwork
 from OptimizerAdam import Optimizer_Adam
+from train import train  # Importamos la función train
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Configuración 
-EPOCHS = 10
-BATCH_SIZE = 64
+EPOCHS = 15
+BATCH_SIZE = 32
 SAVE_AND_PRINT_EACH = 1
 NUM_SAMPLES = 5
 SHOW_RESULTS = True
 INPUT_SIZE = 784
-SIZE1 = 128   
-SIZE2 = 64    
+SIZE1 = 128  
+SIZE2 = 32    
 OUTPUT_SIZE = 10
 LEARNING_RATE = 0.1
 
@@ -80,13 +81,16 @@ def plot_metrics(network):
         plt.close()
 
 def redtraining():
-    # Entrena y evalúa la red neuronal y cargar datos
+    # Entrena y evalúa la red neuronal y carga los datos
     train_images, train_labels, test_images, test_labels = load_data()
 
     adam_optimizer = Optimizer_Adam(learning_rate=LEARNING_RATE, decay=1e-3)
-    # Cambiar la inicialización para que se ajuste a la red de tres capas 
+    
+    # Inicializa la red de tres capas 
     neural_net = NeuralNetwork(INPUT_SIZE, SIZE1, SIZE2, OUTPUT_SIZE, LEARNING_RATE, adam_optimizer)
-    neural_net.train(train_images, train_labels, EPOCHS, BATCH_SIZE, test_labels, test_images, SAVE_AND_PRINT_EACH)
+    
+    # Llamamos a train() desde train.py en lugar de neural_net.train()
+    train(neural_net, train_images, train_labels, EPOCHS, BATCH_SIZE, test_labels, test_images, SAVE_AND_PRINT_EACH)
 
     predicted_labels = neural_net.predict(test_images)
     accuracy = np.mean(np.argmax(test_labels, axis=1) == predicted_labels)
@@ -102,7 +106,6 @@ def redtraining():
         plot_metrics(neural_net)
 
 def main():
-   
     try:
         redtraining()
     except Exception as e:

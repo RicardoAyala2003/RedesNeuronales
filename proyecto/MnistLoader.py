@@ -62,3 +62,7 @@ displayImage(mnist_train.images[1], "MNIST Image 2")
 displayImage(mnist_train.images[2], "MNIST Image 3")
 
 print(f"Labels: {mnist_train.labels[0]}, {mnist_train.labels[1]}, {mnist_train.labels[2]}")
+
+for i in range(2):
+    print(mnist_train.images[i]) 
+    print("\n")
